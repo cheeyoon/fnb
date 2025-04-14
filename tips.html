@@ -492,6 +492,13 @@
             margin: 0;
             color: var(--text-primary);
         }
+
+        /* Kitchen percentage field highlight */
+        .kitchen-field {
+            border-left: 3px solid var(--apple-green);
+            padding-left: 12px;
+            background-color: rgba(52, 199, 89, 0.05);
+        }
     </style>
 </head>
 <body>
@@ -515,6 +522,14 @@
                 <div class="form-group">
                     <label for="totalTips">Total Tips Collected ($)</label>
                     <input type="number" id="totalTips" min="0" step="0.01" value="1000" placeholder="Enter total tip amount">
+                </div>
+
+                <div class="form-group kitchen-field">
+                    <label for="kitchenPercentage">Kitchen Share (%)</label>
+                    <input type="number" id="kitchenPercentage" min="0" max="100" value="7" placeholder="Enter kitchen percentage">
+                    <span class="helper-text">
+                        The kitchen receives this percentage of the total tips before distribution to other workers.
+                    </span>
                 </div>
 
                 <div class="form-group">
@@ -555,6 +570,7 @@
             <div class="tip-row">
                 <div class="tip-row-title">Quick Tips</div>
                 <ul class="tip-list">
+                    <li>Kitchen receives its percentage share before tips are distributed to workers</li>
                     <li>Use the "Add Worker" button to add as many workers as needed</li>
                     <li>Enter each worker's name (optional) and eligibility percentage</li>
                     <li>100% means the worker gets a full share</li>
@@ -679,6 +695,14 @@
         function calculateTips() {
             const totalTips = parseFloat(document.getElementById('totalTips').value) || 0;
             const thresholdPercentage = parseFloat(document.getElementById('thresholdPercentage').value) || 30;
+            const kitchenPercentage = parseFloat(document.getElementById('kitchenPercentage').value) || 7;
+            
+            // Calculate kitchen's share first
+            const kitchenShare = totalTips * (kitchenPercentage / 100);
+            
+            // Remaining amount after kitchen's share
+            const remainingTips = totalTips - kitchenShare;
+            
             const workers = document.querySelectorAll('.worker-row');
             const workerData = [];
             
@@ -696,8 +720,8 @@
                 totalPercentagePoints += percentage;
             });
             
-            // Calculate the value of a single 100% share
-            const valueOfFullShare = totalTips / (totalPercentagePoints / 100);
+            // Calculate the value of a single 100% share from the remaining tips
+            const valueOfFullShare = remainingTips / (totalPercentagePoints / 100);
             
             // Calculate initial tip amounts
             let remainderFromRounding = 0;
@@ -726,16 +750,16 @@
                 });
             }
             
-            // Calculate sum of final tips to verify accuracy
-            let finalTipSum = 0;
+            // Calculate sum of final worker tips to verify accuracy
+            let finalWorkerTipSum = 0;
             workerData.forEach(worker => {
-                finalTipSum += worker.finalTipAmount;
+                finalWorkerTipSum += worker.finalTipAmount;
             });
             
             // Format for display and adjust for rounding errors if necessary
-            if (Math.abs(finalTipSum - totalTips) > 0.01) {
+            if (Math.abs(finalWorkerTipSum - remainingTips) > 0.01) {
                 // Adjust the last worker to ensure total matches
-                const difference = totalTips - finalTipSum;
+                const difference = remainingTips - finalWorkerTipSum;
                 if (workerData.length > 0) {
                     workerData[workerData.length - 1].finalTipAmount += difference;
                 }
@@ -743,17 +767,30 @@
             
             // Generate result HTML
             const resultHTML = `
+                <div class="tip-row">
+                    <div class="tip-row-title">Summary</div>
+                    <p>Total Tips Collected: $${totalTips.toFixed(2)}</p>
+                    <p>Kitchen Share (${kitchenPercentage}%): $${kitchenShare.toFixed(2)}</p>
+                    <p>Remaining Tips for Distribution: $${remainingTips.toFixed(2)}</p>
+                </div>
+                
                 <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
-                                <th>Worker</th>
+                                <th>Recipient</th>
                                 <th>Eligibility %</th>
                                 <th>Initial Amount</th>
                                 <th>Final Amount</th>
                             </tr>
                         </thead>
                         <tbody>
+                            <tr>
+                                <td>Kitchen</td>
+                                <td>${kitchenPercentage}% of total</td>
+                                <td>$${kitchenShare.toFixed(2)}</td>
+                                <td>$${kitchenShare.toFixed(2)}</td>
+                            </tr>
                             ${workerData.map(worker => {
                                 const isAboveThreshold = worker.percentage > thresholdPercentage;
                                 return `
@@ -773,6 +810,7 @@
                     </table>
                 </div>
                 <div class="adjustment-info">
+                    <p><strong>Kitchen Deduction:</strong> $${kitchenShare.toFixed(2)} (${kitchenPercentage}% of total tips) was allocated to the kitchen before distributing the remaining $${remainingTips.toFixed(2)} to workers.</p>
                     <p><strong>Rounding Adjustment:</strong> $${remainderFromRounding.toFixed(2)} was collected from rounding down workers above ${thresholdPercentage}% eligibility and distributed to ${lowThresholdWorkers.length} worker(s) at or below ${thresholdPercentage}% eligibility.</p>
                     ${lowThresholdWorkers.length > 0 ? `<p>Each low-threshold worker received an extra $${(remainderFromRounding / lowThresholdWorkers.length).toFixed(2)}.</p>` : ''}
                 </div>
@@ -788,6 +826,8 @@
         function setExample() {
             // Set total tips to $1000
             document.getElementById('totalTips').value = 1000;
+            // Set kitchen percentage to 7%
+            document.getElementById('kitchenPercentage').value = 7;
             // Set threshold to 30%
             document.getElementById('thresholdPercentage').value = 30;
             
