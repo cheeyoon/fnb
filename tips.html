@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Tip Calculator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .worker-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .worker-row input {
+            margin-right: 10px;
+        }
+        .remove-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 10px;
+            cursor: pointer;
+        }
+        .remove-btn:hover {
+            background-color: #c0392b;
+        }
+        .add-worker-btn {
+            background-color: #2ecc71;
+            margin-bottom: 20px;
+        }
+        .add-worker-btn:hover {
+            background-color: #27ae60;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .example {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+        }
+        .tips {
+            font-style: italic;
+            margin-top: 15px;
+            color: #7f8c8d;
+        }
+        .rounding-threshold {
+            margin-bottom: 15px;
+        }
+        .adjustment-info {
+            background-color: #fffbea;
+            border-left: 4px solid #f1c40f;
+            padding: 10px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Restaurant Tip Calculator</h1>
+    
+    <div class="container">
+        <div class="form-group">
+            <label for="totalTips">Total Tips Collected ($):</label>
+            <input type="number" id="totalTips" min="0" step="0.01" value="1000">
+        </div>
+
+        <div class="form-group rounding-threshold">
+            <label for="thresholdPercentage">Rounding Threshold (%):</label>
+            <input type="number" id="thresholdPercentage" min="0" max="100" value="30">
+            <small style="display: block; margin-top: 5px; color: #666;">
+                Workers above this eligibility percentage will have their tips rounded down to the nearest dollar. 
+                Remaining cents will be redistributed to workers at or below this percentage.
+            </small>
+        </div>
+        
+        <button class="add-worker-btn" onclick="addWorker()">+ Add Worker</button>
+        
+        <div id="workers-container">
+            <!-- Workers will be added here -->
+        </div>
+        
+        <button onclick="calculateTips()">Calculate Tips</button>
+        
+        <div class="results" id="results">
+            <!-- Results will be displayed here -->
+        </div>
+        
+        <div class="example">
+            <h3>Example Scenario:</h3>
+            <p>Total tips: $1000</p>
+            <p>5 workers eligible for 100% of the split</p>
+            <p>1 worker eligible for 70% of the split</p>
+            <p>1 worker eligible for 30% of the split</p>
+            <p><strong>Click the button below to set up this example:</strong></p>
+            <button onclick="setExample()">Load Example</button>
+        </div>
+        
+        <div class="tips">
+            <p><strong>Tips:</strong></p>
+            <ul>
+                <li>Use the "Add Worker" button to add as many workers as needed</li>
+                <li>Enter each worker's name (optional) and eligibility percentage</li>
+                <li>100% means the worker gets a full share</li>
+                <li>Lower percentages result in partial shares</li>
+                <li>Workers above the threshold percentage have their tips rounded down</li>
+                <li>The extra cents from rounding are redistributed to workers at or below the threshold</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let workerCount = 0;
+        
+        // Initialize the page
+        window.onload = function() {
+            // Start with two workers
+            addWorker();
+            addWorker();
+        };
+        
+        function addWorker() {
+            workerCount++;
+            
+            const workersContainer = document.getElementById('workers-container');
+            const workerRow = document.createElement('div');
+            workerRow.className = 'worker-row';
+            workerRow.id = `worker-${workerCount}`;
+            
+            workerRow.innerHTML = `
+                <input type="text" placeholder="Worker ${workerCount} Name" class="worker-name" style="width: 40%;">
+                <input type="number" value="100" min="0" max="100" class="worker-percentage" style="width: 40%;">
+                <span style="margin: 0 5px;">%</span>
+                <button class="remove-btn" onclick="removeWorker(${workerCount})">✕</button>
+            `;
+            
+            workersContainer.appendChild(workerRow);
+        }
+        
+        function removeWorker(id) {
+            const workerElement = document.getElementById(`worker-${id}`);
+            if (workerElement) {
+                workerElement.remove();
+            }
+            
+            // Make sure we always have at least one worker
+            const workersContainer = document.getElementById('workers-container');
+            if (workersContainer.children.length === 0) {
+                addWorker();
+            }
+        }
+        
+        function calculateTips() {
+            const totalTips = parseFloat(document.getElementById('totalTips').value) || 0;
+            const thresholdPercentage = parseFloat(document.getElementById('thresholdPercentage').value) || 30;
+            const workers = document.querySelectorAll('.worker-row');
+            const workerData = [];
+            
+            let totalPercentagePoints = 0;
+            
+            // Collect worker data and calculate total eligibility points
+            workers.forEach((worker, index) => {
+                const nameInput = worker.querySelector('.worker-name');
+                const percentageInput = worker.querySelector('.worker-percentage');
+                
+                const name = nameInput.value.trim() || `Worker ${index + 1}`;
+                const percentage = parseFloat(percentageInput.value) || 0;
+                
+                workerData.push({ name, percentage });
+                totalPercentagePoints += percentage;
+            });
+            
+            // Calculate the value of a single 100% share
+            const valueOfFullShare = totalTips / (totalPercentagePoints / 100);
+            
+            // Calculate initial tip amounts
+            let remainderFromRounding = 0;
+            let lowThresholdWorkers = [];
+            
+            workerData.forEach(worker => {
+                const rawTipAmount = valueOfFullShare * (worker.percentage / 100);
+                worker.rawTipAmount = rawTipAmount;
+                
+                if (worker.percentage > thresholdPercentage) {
+                    // Round down for workers above threshold
+                    worker.finalTipAmount = Math.floor(rawTipAmount);
+                    remainderFromRounding += rawTipAmount - worker.finalTipAmount;
+                } else {
+                    // Mark workers at or below threshold (will adjust later)
+                    worker.finalTipAmount = rawTipAmount;
+                    lowThresholdWorkers.push(worker);
+                }
+            });
+            
+            // Distribute remainder to workers at or below threshold
+            if (lowThresholdWorkers.length > 0 && remainderFromRounding > 0) {
+                const extraPerLowWorker = remainderFromRounding / lowThresholdWorkers.length;
+                lowThresholdWorkers.forEach(worker => {
+                    worker.finalTipAmount += extraPerLowWorker;
+                });
+            }
+            
+            // Calculate sum of final tips to verify accuracy
+            let finalTipSum = 0;
+            workerData.forEach(worker => {
+                finalTipSum += worker.finalTipAmount;
+            });
+            
+            // Format for display and adjust for rounding errors if necessary
+            if (Math.abs(finalTipSum - totalTips) > 0.01) {
+                // Adjust the last worker to ensure total matches
+                const difference = totalTips - finalTipSum;
+                if (workerData.length > 0) {
+                    workerData[workerData.length - 1].finalTipAmount += difference;
+                }
+            }
+            
+            // Generate result HTML
+            const resultHTML = `
+                <h3>Tip Distribution Results:</h3>
+                <table>
+                    <tr>
+                        <th>Worker</th>
+                        <th>Eligibility %</th>
+                        <th>Initial Amount</th>
+                        <th>Final Amount</th>
+                    </tr>
+                    ${workerData.map(worker => {
+                        const isAboveThreshold = worker.percentage > thresholdPercentage;
+                        return `
+                            <tr>
+                                <td>${worker.name}</td>
+                                <td>${worker.percentage}%</td>
+                                <td>$${worker.rawTipAmount.toFixed(2)}</td>
+                                <td>$${worker.finalTipAmount.toFixed(2)}${isAboveThreshold ? ' (rounded down)' : ''}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                    <tr>
+                        <td colspan="3"><strong>Total</strong></td>
+                        <td><strong>$${totalTips.toFixed(2)}</strong></td>
+                    </tr>
+                </table>
+                <div class="adjustment-info">
+                    <p><strong>Rounding Adjustment:</strong> $${remainderFromRounding.toFixed(2)} was collected from rounding down workers above ${thresholdPercentage}% eligibility and distributed to ${lowThresholdWorkers.length} worker(s) at or below ${thresholdPercentage}% eligibility.</p>
+                    ${lowThresholdWorkers.length > 0 ? `<p>Each low-threshold worker received an extra $${(remainderFromRounding / lowThresholdWorkers.length).toFixed(2)}.</p>` : ''}
+                </div>
+            `;
+            
+            document.getElementById('results').innerHTML = resultHTML;
+        }
+        
+        function setExample() {
+            // Set total tips to $1000
+            document.getElementById('totalTips').value = 1000;
+            // Set threshold to 30%
+            document.getElementById('thresholdPercentage').value = 30;
+            
+            // Clear current workers
+            document.getElementById('workers-container').innerHTML = '';
+            
+            // Add 5 workers at 100%
+            for (let i = 1; i <= 5; i++) {
+                addWorkerWithValues(`Full-time ${i}`, 100);
+            }
+            
+            // Add 1 worker at 70%
+            addWorkerWithValues("Part-time 1", 70);
+            
+            // Add 1 worker at 30%
+            addWorkerWithValues("Part-time 2", 30);
+            
+            // Calculate the results
+            calculateTips();
+        }
+        
+        function addWorkerWithValues(name, percentage) {
+            workerCount++;
+            
+            const workersContainer = document.getElementById('workers-container');
+            const workerRow = document.createElement('div');
+            workerRow.className = 'worker-row';
+            workerRow.id = `worker-${workerCount}`;
+            
+            workerRow.innerHTML = `
+                <input type="text" value="${name}" class="worker-name" style="width: 40%;">
+                <input type="number" value="${percentage}" min="0" max="100" class="worker-percentage" style="width: 40%;">
+                <span style="margin: 0 5px;">%</span>
+                <button class="remove-btn" onclick="removeWorker(${workerCount})">✕</button>
+            `;
+            
+            workersContainer.appendChild(workerRow);
+        }
+    </script>
+</body>
+</html>
