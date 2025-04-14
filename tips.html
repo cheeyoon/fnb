@@ -761,7 +761,7 @@
                                         <td>${worker.name}</td>
                                         <td>${worker.percentage}%</td>
                                         <td>$${worker.rawTipAmount.toFixed(2)}</td>
-                                        <td>$${worker.finalTipAmount.toFixed(2)}${isAboveThreshold ? ' (rounded)' : ''}</td>
+                                        <td>$${worker.finalTipAmount.toFixed(2)}${isAboveThreshold ? '' : ''}</td>
                                     </tr>
                                 `;
                             }).join('')}
