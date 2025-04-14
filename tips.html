@@ -794,11 +794,16 @@
             // Clear current workers
             document.getElementById('workers-container').innerHTML = '';
             
-            // Add 5 workers at 100%
-            for (let i = 1; i <= 5; i++) {
-                addWorkerWithValues(`Server/Chef ${i}`, 100);
+            // Add 3 workers at 100%
+            for (let i = 1; i <= 3; i++) {
+                addWorkerWithValues(`Server ${i}`, 100);
             }
             
+            // Add 2 workers at 100%
+            for (let i = 1; i <= 2; i++) {
+                addWorkerWithValues(`Chef ${i}`, 100);
+            }
+
             // Add 1 worker at 70%
             addWorkerWithValues("Server", 70);
             
