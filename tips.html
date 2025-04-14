@@ -796,14 +796,14 @@
             
             // Add 5 workers at 100%
             for (let i = 1; i <= 5; i++) {
-                addWorkerWithValues(`Full-time ${i}`, 100);
+                addWorkerWithValues(`Server/Chef ${i}`, 100);
             }
             
             // Add 1 worker at 70%
-            addWorkerWithValues("Part-time 1", 70);
+            addWorkerWithValues("Server", 70);
             
             // Add 1 worker at 30%
-            addWorkerWithValues("Part-time 2", 30);
+            addWorkerWithValues("Busser", 30);
             
             // Calculate the results
             calculateTips();
