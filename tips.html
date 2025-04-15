@@ -735,16 +735,16 @@
             const roundingDifference = remainingTips - calculatedWorkerTotal;
             
             if (roundingDifference !== 0 && workerData.length > 0) {
-                // Find the worker with the highest tip amount to adjust
-                let highestTipWorker = workerData[0];
+                // Find the worker with the lowest tip amount to adjust
+                let lowestTipWorker = workerData[0];
                 for (let i = 1; i < workerData.length; i++) {
-                    if (workerData[i].finalTipAmount > highestTipWorker.finalTipAmount) {
-                        highestTipWorker = workerData[i];
+                    if (workerData[i].finalTipAmount < lowestTipWorker.finalTipAmount) {
+                        lowestTipWorker = workerData[i];
                     }
                 }
                 
                 // Adjust this worker's amount to balance the total
-                highestTipWorker.finalTipAmount += roundingDifference;
+                lowestTipWorker.finalTipAmount += roundingDifference;
             }
             
             // Generate result HTML with appropriate explanations
@@ -796,7 +796,7 @@
                     <p><strong>Kitchen Deduction:</strong> $${exactKitchenShare.toFixed(2)} (${kitchenPercentage}% of rounded total tips) was rounded to $${kitchenShare.toFixed(2)} for the kitchen.</p>
                     <p><strong>Worker Distribution:</strong> The remaining $${remainingTips.toFixed(2)} was distributed to workers based on eligibility percentages.</p>
                     <p><strong>Rounding:</strong> All worker tip amounts were rounded to the nearest whole dollar for simplicity.</p>
-                    ${roundingDifference !== 0 ? `<p><strong>Balance Adjustment:</strong> $${Math.abs(roundingDifference).toFixed(2)} was ${roundingDifference > 0 ? 'added to' : 'subtracted from'} the largest tip amount to ensure the total remains accurate.</p>` : ''}
+                    ${roundingDifference !== 0 ? `<p><strong>Balance Adjustment:</strong> $${Math.abs(roundingDifference).toFixed(2)} was ${roundingDifference > 0 ? 'added to' : 'subtracted from'} the lowest tip amount to ensure the total remains accurate.</p>` : ''}
                 </div>
             `;
 
