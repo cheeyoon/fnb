@@ -816,24 +816,21 @@
             // Clear current workers
             document.getElementById('workers-container').innerHTML = '';
 
-            // Add 2 servers at 100%
-            for (let i = 1; i <= 2; i++) {
+            // Add 3 servers at 100%
+            for (let i = 1; i <= 3; i++) {
                 addWorkerWithValues(`Server ${i}`, 100);
             }
-
-            // Add 1 server at 70%
-            addWorkerWithValues("Server 3", 70);
 
             // Add 2 chefs at 100%
             for (let i = 1; i <= 2; i++) {
                 addWorkerWithValues(`Chef ${i}`, 100);
             }
-
-            // Add 1 bartender at 100%
-            addWorkerWithValues("Bartender", 100);
-
+            
             // Add 1 busser at 30%
             addWorkerWithValues("Busser", 30);
+            
+            // Add 1 bartender at 100%
+            addWorkerWithValues("Bartender", 100);
 
             // Calculate the results
             calculateTips();
